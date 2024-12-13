@@ -6,7 +6,6 @@ import Modal from 'react-modal';
 
 // Firebase imports
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
 import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot } from "firebase/firestore";
 
 // Firebase configuration
