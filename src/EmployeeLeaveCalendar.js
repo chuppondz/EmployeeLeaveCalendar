@@ -88,7 +88,7 @@ const EmployeeLeaveCalendar = () => {
             transform: 'translate(-50%, -50%)',
             width: '300px',
             borderRadius: '10px',
-            zIndex: 1001,
+            zIndex: 1006,
           },
         }}
       >
