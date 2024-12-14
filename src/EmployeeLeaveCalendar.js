@@ -133,7 +133,7 @@ const EmployeeLeaveCalendar = () => {
       />
 
       <div style={{ marginTop: '30px' }}>
-        <h2>จัดการพนัก</h2>
+        <h2>จัดการพนักงาน</h2>
         <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center' }}>
           <input
             type="text"
