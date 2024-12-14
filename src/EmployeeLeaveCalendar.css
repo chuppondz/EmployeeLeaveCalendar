@@ -13,7 +13,7 @@
   }
 }
 
-body {
+.body {
   font-family: Kanit !important;
 }
 
@@ -40,4 +40,8 @@ body {
   to {
     transform: rotate(360deg);
   }
+}
+
+.ReactModal__Overlay.ReactModal__Overlay--after-open {
+  z-index: 2000;
 }

@@ -1,11 +1,41 @@
 body {
   margin: 0;
-  font-family: Kanit !important;
+  font-family: 'Kanit';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: 'Kanit';
+}
+
+.ReactModal__Overlay.ReactModal__Overlay--after-open {
+  z-index: 1000;
+}
+
+.color-picker {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 40px;
+  height: 40px;
+  border: 2px solid #4cbc55;
+  border-radius: 5px;
+  cursor: pointer;
+  background-color: #ffffff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.color-picker:hover {
+  border-color: #3b9c4a;
+}
+
+.color-picker:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(76, 188, 85, 0.5);
+}
+
+h2#fc-dom-1 {
+  font-size: 20px;
 }
