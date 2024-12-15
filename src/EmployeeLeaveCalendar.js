@@ -29,6 +29,7 @@ const EmployeeLeaveCalendar = () => {
   const [employees, setEmployees] = useState([]);
   const [newEmployee, setNewEmployee] = useState('');
   const [selectedColor, setSelectedColor] = useState('#76bc55');
+  const [note, setNote] = useState('');
 
   useEffect(() => {
     const unsubscribeEvents = onSnapshot(collection(db, 'events'), (snapshot) => {
@@ -53,18 +54,19 @@ const EmployeeLeaveCalendar = () => {
     };
   }, []);
 
-  const handleAddLeave = async () => {
-    if (employeeName.trim()) {
+  const handleSaveLeave = async () => {
+    if (employeeName.trim() && selectedDate) {
       const employee = employees.find((e) => e.name === employeeName);
       const color = employee?.color || '#76bc55';
-      const newEvent = { title: employeeName, start: selectedDate, backgroundColor: color };
+      const newEvent = { title: `${employeeName} - ${note}`, start: selectedDate, backgroundColor: color };
 
       try {
         await addDoc(collection(db, 'events'), newEvent);
         setEmployeeName('');
+        setNote('');
         setIsModalOpen(false);
       } catch (error) {
-        console.error('Error adding leave:', error);
+        console.error('Error saving leave:', error);
       }
     }
   };
@@ -83,18 +85,24 @@ const EmployeeLeaveCalendar = () => {
   };
 
   const handleDeleteEmployee = async (employeeId) => {
-    try {
-      await deleteDoc(doc(db, 'employees', employeeId));
-    } catch (error) {
-      console.error('Error deleting employee:', error);
+    const confirmDelete = window.confirm("Are you sure you want to delete this employee?");
+    if (confirmDelete) {
+      try {
+        await deleteDoc(doc(db, 'employees', employeeId));
+      } catch (error) {
+        console.error('Error deleting employee:', error);
+      }
     }
   };
 
   const handleDeleteEvent = async (eventId) => {
-    try {
-      await deleteDoc(doc(db, 'events', eventId));
-    } catch (error) {
-      console.error('Error deleting event:', error);
+    const confirmDelete = window.confirm("Are you sure you want to delete this leave event?");
+    if (confirmDelete) {
+      try {
+        await deleteDoc(doc(db, 'events', eventId));
+      } catch (error) {
+        console.error('Error deleting event:', error);
+      }
     }
   };
 
@@ -102,7 +110,7 @@ const EmployeeLeaveCalendar = () => {
 
   return (
     <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif', color: '#4cbc55' }}>
-      <h1 style={{ textAlign: 'center', color: '#4cbc55' }}>ปฏิทินการลา TESTER INET</h1>
+      <h1 style={{ textAlign: 'center', color: '#4cbc55' }}>Employee Leave Calendar</h1>
 
       <FullCalendar
         plugins={[dayGridPlugin, interactionPlugin]}
@@ -124,7 +132,7 @@ const EmployeeLeaveCalendar = () => {
                 borderRadius: '3px',
                 cursor: 'pointer',
               }}
-              onClick={() => handleDeleteEvent(eventInfo.event.id)} // ลบเหตุการณ์
+              onClick={() => handleDeleteEvent(eventInfo.event.id)}
             >
               ✕
             </button>
@@ -133,7 +141,7 @@ const EmployeeLeaveCalendar = () => {
       />
 
       <div style={{ marginTop: '30px' }}>
-        <h2>จัดการพนักงาน</h2>
+        <h2>Manage Employees</h2>
         <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center' }}>
           <input
             type="text"
@@ -159,14 +167,6 @@ const EmployeeLeaveCalendar = () => {
                 border: 'none',
                 borderRadius: '50%',
                 cursor: 'pointer',
-                boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)',
-                transition: 'box-shadow 0.3s ease-in-out',
-              }}
-              onMouseOver={(e) => {
-                e.target.style.boxShadow = '0px 0px 15px rgba(0, 0, 0, 0.3)';
-              }}
-              onMouseOut={(e) => {
-                e.target.style.boxShadow = '0px 0px 10px rgba(0, 0, 0, 0.2)';
               }}
             />
           </div>
@@ -180,14 +180,6 @@ const EmployeeLeaveCalendar = () => {
               border: 'none',
               borderRadius: '5px',
               cursor: 'pointer',
-              boxShadow: '0px 0px 10px rgba(0, 0, 0, 0.2)',
-              transition: 'box-shadow 0.3s ease-in-out',
-            }}
-            onMouseOver={(e) => {
-              e.target.style.boxShadow = '0px 0px 15px rgba(0, 0, 0, 0.3)';
-            }}
-            onMouseOut={(e) => {
-              e.target.style.boxShadow = '0px 0px 10px rgba(0, 0, 0, 0.2)';
             }}
           >
             Add
@@ -225,7 +217,7 @@ const EmployeeLeaveCalendar = () => {
                       cursor: 'pointer',
                       padding: '5px 10px',
                     }}
-                    onClick={() => handleDeleteEmployee(employee.id)} // ลบพนักงาน
+                    onClick={() => handleDeleteEmployee(employee.id)}
                   >
                     Delete
                   </button>
@@ -236,68 +228,85 @@ const EmployeeLeaveCalendar = () => {
         </table>
       </div>
 
+      {/* Modal for Adding Leave */}
       <Modal
         isOpen={isModalOpen}
         onRequestClose={() => setIsModalOpen(false)}
         style={{
-          overlay: { backgroundColor: 'rgba(0, 0, 0, 0.75)' },
           content: {
-            top: '50%',
-            left: '50%',
-            right: 'auto',
-            bottom: 'auto',
-            marginRight: '-50%',
-            transform: 'translate(-50%, -50%)',
-            width: '300px',
+            width: '400px',
+            margin: 'auto',
+            padding: '20px',
             borderRadius: '10px',
+            border: '1px solid #4cbc55',
           },
         }}
       >
-        <h2>Add Employee Leave</h2>
-        <p>Date: {selectedDate}</p>
-        <select
-          value={employeeName}
-          onChange={(e) => setEmployeeName(e.target.value)}
-          style={{
-            width: '100%',
-            marginBottom: '10px',
-            padding: '10px',
-            borderRadius: '5px',
-            border: '1px solid #4cbc55',
-          }}
-        >
-          <option value="">Select Employee</option>
-          {employees.map((employee) => (
-            <option key={employee.id} value={employee.name}>
-              {employee.name}
-            </option>
-          ))}
-        </select>
-        <button
-          onClick={handleAddLeave}
-          style={{
-            width: '100%',
-            background: '#4cbc55',
-            color: 'white',
-            padding: '10px',
-            borderRadius: '5px',
-          }}
-        >
-          Add Leave
-        </button>
-        <button
-          onClick={() => setIsModalOpen(false)}
-          style={{
-            width: '100%',
-            marginTop: '10px',
-            background: 'gray',
-            color: 'white',
-            padding: '10px',
-            borderRadius: '5px',
-          }}
-        >
-          Cancel
-        </button>
+        <h2>Add Leave</h2>
+        <div style={{ marginBottom: '10px' }}>
+          <label style={{ display: 'block', marginBottom: '5px' }}>Select Employee:</label>
+          <select
+            value={employeeName}
+            onChange={(e) => setEmployeeName(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '10px',
+              borderRadius: '5px',
+              border: '1px solid #ccc',
+            }}
+          >
+            <option value="">-- Select Employee --</option>
+            {employees.map((employee) => (
+              <option key={employee.id} value={employee.name}>
+                {employee.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div style={{ marginBottom: '10px' }}>
+          <label style={{ display: 'block', marginBottom: '5px' }}>Note:</label>
+          <input
+            type="text"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Add a note (optional)"
+            style={{
+              width: '100%',
+              padding: '10px',
+              borderRadius: '5px',
+              border: '1px solid #ccc',
+            }}
+          />
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <button
+            onClick={handleSaveLeave}
+            style={{
+              padding: '10px 20px',
+              background: '#4cbc55',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: 'pointer',
+              marginRight: '10px',
+            }}
+          >
+            Save
+          </button>
+          <button
+            onClick={() => setIsModalOpen(false)}
+            style={{
+              padding: '10px 20px',
+              background: 'gray',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: 'pointer',
+            }}
+          >
+            Cancel
+          </button>
+        </div>
       </Modal>
     </div>
   );
