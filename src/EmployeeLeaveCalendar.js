@@ -55,9 +55,23 @@ const EmployeeLeaveCalendar = () => {
       setEmployees(fetchedEmployees);
     });
 
+    const unsubscribeTasks = onSnapshot(collection(db, 'tasks'), (snapshot) => {
+      const fetchedTasks = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      const tasksByEmployee = fetchedTasks.reduce((acc, task) => {
+        acc[task.employeeId] = acc[task.employeeId] || [];
+        acc[task.employeeId].push(task);
+        return acc;
+      }, {});
+      setTasks(tasksByEmployee);
+    });
+
     return () => {
       unsubscribeEvents();
       unsubscribeEmployees();
+      unsubscribeTasks();
     };
   }, []);
 
@@ -118,25 +132,48 @@ const EmployeeLeaveCalendar = () => {
     setTaskDialogOpen(true);
   };
 
-  const handleSaveTask = () => {
+  const handleSaveTask = async () => {
     if (newTask.trim()) {
-      setTasks((prevTasks) => {
-        const updatedTasks = { ...prevTasks, [selectedEmployeeId]: [...(prevTasks[selectedEmployeeId] || []), newTask] };
-        return updatedTasks;
-      });
-      setNewTask('');
-      setTaskDialogOpen(false);
+      try {
+        // บันทึก task ใหม่ลงใน Firestore
+        const docRef = await addDoc(collection(db, 'tasks'), {
+          employeeId: selectedEmployeeId,  // เพิ่ม employeeId เพื่อให้รู้ว่าเป็น task ของพนักงานคนไหน
+          task: newTask,
+          createdAt: new Date(),  // เพิ่มวันที่ที่สร้าง task
+        });
+
+        // อัปเดต task ใน state
+        setTasks((prevTasks) => {
+          const updatedTasks = { ...prevTasks, [selectedEmployeeId]: [...(prevTasks[selectedEmployeeId] || []), { id: docRef.id, task: newTask }] };
+          return updatedTasks;
+        });
+
+        // ล้างค่าของ newTask และปิด dialog
+        setNewTask('');
+        setTaskDialogOpen(false);
+      } catch (error) {
+        console.error('Error saving task:', error);
+      }
     }
   };
 
-  const handleDeleteTask = (employeeId, taskIndex) => {
+  const handleDeleteTask = async (employeeId, taskId) => {
     const confirmDelete = window.confirm("Are you sure you want to delete this task?");
     if (confirmDelete) {
-      setTasks((prevTasks) => {
-        const updatedTasks = { ...prevTasks };
-        updatedTasks[employeeId].splice(taskIndex, 1);
-        return updatedTasks;
-      });
+      try {
+        // ลบ task จาก Firestore
+        const taskRef = doc(db, 'tasks', taskId);  // ใช้ taskId ที่ได้จาก state
+        await deleteDoc(taskRef);  // ลบจาก Firestore
+
+        // อัปเดต state เพื่อให้ UI แสดงผลถูกต้อง
+        setTasks((prevTasks) => {
+          const updatedTasks = { ...prevTasks };
+          updatedTasks[employeeId] = updatedTasks[employeeId].filter((task) => task.id !== taskId);  // ลบ task ที่ตรงกับ taskId
+          return updatedTasks;
+        });
+      } catch (error) {
+        console.error('Error deleting task:', error);
+      }
     }
   };
 
@@ -234,13 +271,13 @@ const EmployeeLeaveCalendar = () => {
                     </td>
                     <td style={{ padding: '10px', border: '1px solid #4cbc55' }}>
                       {tasks[employee.id]
-                        ? tasks[employee.id].map((task, index) => (
-                            <div key={index} style={{ marginBottom: '5px' }}>
-                              {task}
+                        ? tasks[employee.id].map((task) => (
+                            <div key={task.id} style={{ marginBottom: '5px' }}>
+                              {task.task}
                               <IconButton
                                 color="error"
                                 size="small"
-                                onClick={() => handleDeleteTask(employee.id, index)}
+                                onClick={() => handleDeleteTask(employee.id, task.id)}
                               >
                                 <DeleteIcon />
                               </IconButton>
@@ -311,15 +348,16 @@ const EmployeeLeaveCalendar = () => {
       >
         <h2>Add Leave</h2>
         <div style={{ marginBottom: '10px' }}>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Select Employee:</label>
+          <label style={{ display: 'block' }}>Employee</label>
           <select
             value={employeeName}
             onChange={(e) => setEmployeeName(e.target.value)}
             style={{
               width: '100%',
               padding: '10px',
+              marginBottom: '20px',
               borderRadius: '5px',
-              border: '1px solid #ccc',
+              borderColor: '#4cbc55',
             }}
           >
             <option value="">-- Select Employee --</option>
@@ -330,50 +368,19 @@ const EmployeeLeaveCalendar = () => {
             ))}
           </select>
         </div>
-        <div style={{ marginBottom: '10px' }}>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Note:</label>
-          <input
-            type="text"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Add a note (optional)"
-            style={{
-              width: '100%',
-              padding: '10px',
-              borderRadius: '5px',
-              border: '1px solid #ccc',
-            }}
-          />
-        </div>
-        <div style={{ textAlign: 'right' }}>
-          <button
-            onClick={handleSaveLeave}
-            style={{
-              padding: '10px 20px',
-              background: '#4cbc55',
-              color: 'white',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer',
-              marginRight: '10px',
-            }}
-          >
-            Save
-          </button>
-          <button
-            onClick={() => setIsModalOpen(false)}
-            style={{
-              padding: '10px 20px',
-              background: 'gray',
-              color: 'white',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer',
-            }}
-          >
-            Cancel
-          </button>
-        </div>
+
+        <TextField
+          label="Note"
+          variant="outlined"
+          fullWidth
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          style={{ marginBottom: '20px' }}
+        />
+
+        <Button variant="contained" color="primary" onClick={handleSaveLeave} fullWidth>
+          Save Leave
+        </Button>
       </Modal>
     </div>
   );
