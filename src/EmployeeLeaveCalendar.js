@@ -5,7 +5,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import Modal from 'react-modal';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot } from 'firebase/firestore';
-import { Button, TextField, Grid, Box, Typography, IconButton } from '@mui/material';
+import { TextField, Button, IconButton, Dialog, DialogActions, DialogContent, DialogTitle, Grid } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 
@@ -34,6 +34,9 @@ const EmployeeLeaveCalendar = () => {
   const [selectedColor, setSelectedColor] = useState('#76bc55');
   const [note, setNote] = useState('');
   const [tasks, setTasks] = useState({});
+  const [taskDialogOpen, setTaskDialogOpen] = useState(false);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
+  const [newTask, setNewTask] = useState('');
 
   useEffect(() => {
     const unsubscribeEvents = onSnapshot(collection(db, 'events'), (snapshot) => {
@@ -111,21 +114,27 @@ const EmployeeLeaveCalendar = () => {
   };
 
   const handleEditTask = (employeeId) => {
-    const task = prompt('Enter task for this employee:');
-    if (task) {
+    setSelectedEmployeeId(employeeId);
+    setTaskDialogOpen(true);
+  };
+
+  const handleSaveTask = () => {
+    if (newTask.trim()) {
       setTasks((prevTasks) => {
-        const updatedTasks = { ...prevTasks, [employeeId]: task };
+        const updatedTasks = { ...prevTasks, [selectedEmployeeId]: [...(prevTasks[selectedEmployeeId] || []), newTask] };
         return updatedTasks;
       });
+      setNewTask('');
+      setTaskDialogOpen(false);
     }
   };
 
-  const handleDeleteTask = (employeeId) => {
+  const handleDeleteTask = (employeeId, taskIndex) => {
     const confirmDelete = window.confirm("Are you sure you want to delete this task?");
     if (confirmDelete) {
       setTasks((prevTasks) => {
         const updatedTasks = { ...prevTasks };
-        delete updatedTasks[employeeId];
+        updatedTasks[employeeId].splice(taskIndex, 1);
         return updatedTasks;
       });
     }
@@ -134,10 +143,8 @@ const EmployeeLeaveCalendar = () => {
   Modal.setAppElement('#root');
 
   return (
-    <Box sx={{ padding: { xs: '10px', sm: '20px' }, fontFamily: 'Arial, sans-serif', color: '#4cbc55' }}>
-      <Typography variant="h4" align="center" color="#4cbc55">
-        Employee Leave Calendar
-      </Typography>
+    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif', color: '#4cbc55' }}>
+      <h1 style={{ textAlign: 'center', color: '#4cbc55' }}>TESTER KKC JOB TRACKING</h1>
 
       <FullCalendar
         plugins={[dayGridPlugin, interactionPlugin]}
@@ -148,130 +155,145 @@ const EmployeeLeaveCalendar = () => {
           setIsModalOpen(true);
         }}
         eventContent={(eventInfo) => (
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>{eventInfo.event.title}</span>
-            <IconButton
-              onClick={() => handleDeleteEvent(eventInfo.event.id)}
-              sx={{
+            <button
+              style={{
                 marginLeft: '5px',
-                backgroundColor: 'red',
+                background: 'red',
                 color: 'white',
+                border: 'none',
                 borderRadius: '3px',
+                cursor: 'pointer',
               }}
+              onClick={() => handleDeleteEvent(eventInfo.event.id)}
             >
-              <DeleteIcon />
-            </IconButton>
-          </Box>
+              ✕
+            </button>
+          </div>
         )}
       />
 
-      <Box sx={{ marginTop: '30px' }}>
-        <Typography variant="h6">Manage Employees</Typography>
-        <Grid container spacing={2} sx={{ marginBottom: '20px' }} alignItems="center">
-          <Grid item xs={12} sm={8}>
-            <TextField
-              label="Add Employee Name"
-              variant="outlined"
-              fullWidth
-              value={newEmployee}
-              onChange={(e) => setNewEmployee(e.target.value)}
-              sx={{ width: '100%' }}
-            />
-          </Grid>
-          <Grid item xs={6} sm={2}>
-            <input
-              type="color"
-              value={selectedColor}
-              onChange={(e) => setSelectedColor(e.target.value)}
-              style={{
-                padding: '5px',
-                width: '100%',
-                height: '40px',
-                border: 'none',
-                borderRadius: '50%',
-                cursor: 'pointer',
-              }}
-            />
-          </Grid>
-          <Grid item xs={6} sm={2}>
-            <Button
-              onClick={handleAddEmployee}
-              variant="contained"
-              fullWidth
-              sx={{
-                backgroundColor: '#4cbc55',
-                color: 'white',
-              }}
-            >
-              Add
-            </Button>
+      <div style={{ marginTop: '30px' }}>
+        <h2>Manage Employees</h2>
+        <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center' }}>
+          <TextField
+            label="Add Employee Name"
+            variant="outlined"
+            value={newEmployee}
+            onChange={(e) => setNewEmployee(e.target.value)}
+            style={{ marginRight: '10px', width: '250px' }}
+          />
+          <input
+            type="color"
+            value={selectedColor}
+            onChange={(e) => setSelectedColor(e.target.value)}
+            style={{
+              padding: '5px',
+              width: '40px',
+              height: '40px',
+              border: 'none',
+              borderRadius: '50%',
+              cursor: 'pointer',
+            }}
+          />
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleAddEmployee}
+            style={{ marginLeft: '10px' }}
+          >
+            Add
+          </Button>
+        </div>
+
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ backgroundColor: '#4cbc55', color: 'white' }}>
+                  <th style={{ padding: '10px', border: '1px solid white' }}>Employee Name</th>
+                  <th style={{ padding: '10px', border: '1px solid white' }}>Color</th>
+                  <th style={{ padding: '10px', border: '1px solid white' }}>Tasks</th>
+                  <th style={{ padding: '10px', border: '1px solid white' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {employees.map((employee) => (
+                  <tr key={employee.id} style={{ textAlign: 'center' }}>
+                    <td style={{ padding: '10px', border: '1px solid #4cbc55' }}>{employee.name}</td>
+                    <td style={{ padding: '10px', border: '1px solid #4cbc55' }}>
+                      <span
+                        style={{
+                          display: 'inline-block',
+                          width: '20px',
+                          height: '20px',
+                          backgroundColor: employee.color,
+                        }}
+                      ></span>
+                    </td>
+                    <td style={{ padding: '10px', border: '1px solid #4cbc55' }}>
+                      {tasks[employee.id]
+                        ? tasks[employee.id].map((task, index) => (
+                            <div key={index} style={{ marginBottom: '5px' }}>
+                              {task}
+                              <IconButton
+                                color="error"
+                                size="small"
+                                onClick={() => handleDeleteTask(employee.id, index)}
+                              >
+                                <DeleteIcon />
+                              </IconButton>
+                            </div>
+                          ))
+                        : 'No tasks assigned'}
+                    </td>
+                    <td style={{ padding: '10px', border: '1px solid #4cbc55' }}>
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        onClick={() => handleEditTask(employee.id)}
+                        style={{ marginRight: '10px' }}
+                      >
+                        <EditIcon />
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        color="secondary"
+                        onClick={() => handleDeleteEmployee(employee.id)}
+                      >
+                        Delete
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </Grid>
         </Grid>
+      </div>
 
-        <Box sx={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ backgroundColor: '#4cbc55', color: 'white' }}>
-                <th style={{ padding: '10px', border: '1px solid white' }}>Employee Name</th>
-                <th style={{ padding: '10px', border: '1px solid white' }}>Color</th>
-                <th style={{ padding: '10px', border: '1px solid white' }}>Tasks</th>
-                <th style={{ padding: '10px', border: '1px solid white' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {employees.map((employee) => (
-                <tr key={employee.id} style={{ textAlign: 'center' }}>
-                  <td style={{ padding: '10px', border: '1px solid #4cbc55' }}>{employee.name}</td>
-                  <td style={{ padding: '10px', border: '1px solid #4cbc55' }}>
-                    <span
-                      style={{
-                        display: 'inline-block',
-                        width: '20px',
-                        height: '20px',
-                        backgroundColor: employee.color,
-                      }}
-                    ></span>
-                  </td>
-                  <td style={{ padding: '10px', border: '1px solid #4cbc55' }}>
-                    {tasks[employee.id] ? tasks[employee.id] : 'No tasks assigned'}
-                  </td>
-                  <td style={{ padding: '10px', border: '1px solid #4cbc55' }}>
-                    <Button
-                      onClick={() => handleEditTask(employee.id)}
-                      sx={{
-                        backgroundColor: '#4cbc55',
-                        color: 'white',
-                        marginRight: '5px',
-                      }}
-                    >
-                      <EditIcon />
-                    </Button>
-                    <Button
-                      onClick={() => handleDeleteTask(employee.id)}
-                      sx={{
-                        backgroundColor: 'red',
-                        color: 'white',
-                      }}
-                    >
-                      <DeleteIcon />
-                    </Button>
-                    <Button
-                      onClick={() => handleDeleteEmployee(employee.id)}
-                      sx={{
-                        backgroundColor: 'red',
-                        color: 'white',
-                        marginLeft: '5px',
-                      }}
-                    >
-                      <DeleteIcon />
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </Box>
-      </Box>
+      {/* Task Dialog */}
+      <Dialog open={taskDialogOpen} onClose={() => setTaskDialogOpen(false)}>
+        <DialogTitle>Add Task for Employee</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="New Task"
+            variant="outlined"
+            fullWidth
+            value={newTask}
+            onChange={(e) => setNewTask(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleSaveTask} color="primary">
+            Save
+          </Button>
+          <Button onClick={() => setTaskDialogOpen(false)} color="secondary">
+            Cancel
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Modal for Adding Leave */}
       <Modal
@@ -287,44 +309,73 @@ const EmployeeLeaveCalendar = () => {
           },
         }}
       >
-        <Typography variant="h6" gutterBottom>Add Leave</Typography>
-        <TextField
-          label="Select Employee"
-          select
-          value={employeeName}
-          onChange={(e) => setEmployeeName(e.target.value)}
-          fullWidth
-          sx={{ marginBottom: '10px' }}
-        >
-          <option value="">-- Select Employee --</option>
-          {employees.map((employee) => (
-            <option key={employee.id} value={employee.name}>
-              {employee.name}
-            </option>
-          ))}
-        </TextField>
-        <TextField
-          label="Note"
-          variant="outlined"
-          fullWidth
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          sx={{ marginBottom: '10px' }}
-        />
-        <Box sx={{ textAlign: 'right' }}>
-          <Button
+        <h2>Add Leave</h2>
+        <div style={{ marginBottom: '10px' }}>
+          <label style={{ display: 'block', marginBottom: '5px' }}>Select Employee:</label>
+          <select
+            value={employeeName}
+            onChange={(e) => setEmployeeName(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '10px',
+              borderRadius: '5px',
+              border: '1px solid #ccc',
+            }}
+          >
+            <option value="">-- Select Employee --</option>
+            {employees.map((employee) => (
+              <option key={employee.id} value={employee.name}>
+                {employee.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div style={{ marginBottom: '10px' }}>
+          <label style={{ display: 'block', marginBottom: '5px' }}>Note:</label>
+          <input
+            type="text"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Add a note (optional)"
+            style={{
+              width: '100%',
+              padding: '10px',
+              borderRadius: '5px',
+              border: '1px solid #ccc',
+            }}
+          />
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <button
             onClick={handleSaveLeave}
-            variant="contained"
-            sx={{ marginRight: '10px', backgroundColor: '#4cbc55' }}
+            style={{
+              padding: '10px 20px',
+              background: '#4cbc55',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: 'pointer',
+              marginRight: '10px',
+            }}
           >
             Save
-          </Button>
-          <Button onClick={() => setIsModalOpen(false)} variant="outlined">
+          </button>
+          <button
+            onClick={() => setIsModalOpen(false)}
+            style={{
+              padding: '10px 20px',
+              background: 'gray',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: 'pointer',
+            }}
+          >
             Cancel
-          </Button>
-        </Box>
+          </button>
+        </div>
       </Modal>
-    </Box>
+    </div>
   );
 };
 
