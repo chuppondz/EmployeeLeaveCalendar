@@ -187,32 +187,37 @@ const EmployeeLeaveCalendar = () => {
       <h1 style={{ textAlign: 'center', color: '#4cbc55' }}>TESTER KKC JOB TRACKING</h1>
 
       <FullCalendar
-        plugins={[dayGridPlugin, interactionPlugin]}
-        initialView="dayGridMonth"
-        events={events}
-        dateClick={(info) => {
-          setSelectedDate(info.dateStr);
-          setIsModalOpen(true);
+  plugins={[dayGridPlugin, interactionPlugin]}
+  initialView="dayGridMonth"
+  events={events}
+  dateClick={(info) => {
+    setSelectedDate(info.dateStr);
+    setIsModalOpen(true);
+  }}
+  eventContent={(eventInfo) => (
+    <div style={{ fontSize: '15px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center' ,padding:'5px'}}>
+      <span>{eventInfo.event.title}</span>
+      {eventInfo.event.extendedProps.description && (
+        <span style={{ fontSize: '18px', color: '#555' }}>
+          {eventInfo.event.extendedProps.description}
+        </span>
+      )}
+      <button
+        style={{
+          marginTop:'5px',
+          background: 'red',
+          color: 'white',
+          border: 'none',
+          borderRadius: '3px',
+          cursor: 'pointer',
         }}
-        eventContent={(eventInfo) => (
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>{eventInfo.event.title}</span>
-            <button
-              style={{
-                marginLeft: '5px',
-                background: 'red',
-                color: 'white',
-                border: 'none',
-                borderRadius: '3px',
-                cursor: 'pointer',
-              }}
-              onClick={() => handleDeleteEvent(eventInfo.event.id)}
-            >
-              ✕
-            </button>
-          </div>
-        )}
-      />
+        onClick={() => handleDeleteEvent(eventInfo.event.id)}
+      >
+        ✕
+      </button>
+    </div>
+  )}
+/>
 <div style={{ marginTop: '30px' }}>
         <h2>Manage Employees</h2>
         <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center' }}>
