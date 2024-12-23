@@ -33,6 +33,8 @@ const EmployeeLeaveCalendar = () => {
   const [leaveType, setLeaveType] = useState('');
   const [leaveNumber, setLeaveNumber] = useState('');
   const [note, setNote] = useState('');
+  const [leaveDetailModalOpen, setLeaveDetailModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
   const [tasks, setTasks] = useState({});
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
   const [newEmployee, setNewEmployee] = useState('');
@@ -40,41 +42,99 @@ const EmployeeLeaveCalendar = () => {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
 
   useEffect(() => {
-    const unsubscribeEvents = onSnapshot(collection(db, 'events'), (snapshot) => {
-      const fetchedEvents = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setEvents(fetchedEvents);
-    });
+      const unsubscribeEvents = onSnapshot(collection(db, 'events'), (snapshot) => {
+        const fetchedEvents = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setEvents(fetchedEvents);
+      });
+  
+      const unsubscribeEmployees = onSnapshot(collection(db, 'employees'), (snapshot) => {
+        const fetchedEmployees = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setEmployees(fetchedEmployees);
+      });
+  
+      const unsubscribeTasks = onSnapshot(collection(db, 'tasks'), (snapshot) => {
+        const fetchedTasks = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        const tasksByEmployee = fetchedTasks.reduce((acc, task) => {
+          acc[task.employeeId] = acc[task.employeeId] || [];
+          acc[task.employeeId].push(task);
+          return acc;
+        }, {});
+        setTasks(tasksByEmployee);
+      });
+  
+      return () => {
+        unsubscribeEvents();
+        unsubscribeEmployees();
+        unsubscribeTasks();
+      };
+    }, []);
 
-    const unsubscribeEmployees = onSnapshot(collection(db, 'employees'), (snapshot) => {
-      const fetchedEmployees = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setEmployees(fetchedEmployees);
-    });
-
-    const unsubscribeTasks = onSnapshot(collection(db, 'tasks'), (snapshot) => {
-      const fetchedTasks = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      const tasksByEmployee = fetchedTasks.reduce((acc, task) => {
-        acc[task.employeeId] = acc[task.employeeId] || [];
-        acc[task.employeeId].push(task);
-        return acc;
-      }, {});
-      setTasks(tasksByEmployee);
-    });
-
-    return () => {
-      unsubscribeEvents();
-      unsubscribeEmployees();
-      unsubscribeTasks();
+  const handleAddTask = async () => {
+      if (taskDescription.trim() && selectedEmployeeId) {
+        const newTask = {
+          employeeId: selectedEmployeeId,
+          task: taskDescription,
+        };
+  
+        try {
+          await addDoc(collection(db, 'tasks'), newTask);
+          setTaskDescription('');
+          setTaskDialogOpen(false);
+        } catch (error) {
+          console.error('Error adding task:', error);
+        }
+      }
     };
-  }, []);
+
+    
+
+  const handleAddEmployee = async () => {
+      if (newEmployee.trim()) {
+        const newEmployeeData = { name: newEmployee };
+        try {
+          await addDoc(collection(db, 'employees'), newEmployeeData);
+          setNewEmployee('');
+        } catch (error) {
+          console.error('Error adding employee:', error);
+        }
+      }
+    };
+  
+    const handleDeleteEmployee = async (employeeId) => {
+      const confirmDelete = window.confirm("Are you sure you want to delete this employee?");
+      if (confirmDelete) {
+        try {
+          await deleteDoc(doc(db, 'employees', employeeId));
+        } catch (error) {
+          console.error('Error deleting employee:', error);
+        }
+      }
+    };
+
+    const handleDeleteTask = async (employeeId, taskId) => {
+        const confirmDelete = window.confirm("Are you sure you want to delete this task?");
+        if (confirmDelete) {
+          try {
+            await deleteDoc(doc(db, 'tasks', taskId));
+          } catch (error) {
+            console.error('Error deleting task:', error);
+          }
+        }
+      };
+
+      const handleEditTask = (employeeId) => {
+        setSelectedEmployeeId(employeeId);
+        setTaskDialogOpen(true);
+      };
 
   const handleSaveLeave = async () => {
     if (employeeName.trim() && selectedDate && leaveType) {
@@ -92,12 +152,13 @@ const EmployeeLeaveCalendar = () => {
         "Note": { backgroundColor: '#f1c1c1', color: 'black' },
       };
 
-      const newEvent = { 
-        title: `${employeeName} - ${leaveType} ${leaveNumber ? `(${leaveNumber})` : ''}`, 
-        start: selectedDate, 
+      const newEvent = {
+        title: employeeName,
+        start: selectedDate,
         backgroundColor: eventColors[leaveType]?.backgroundColor || '#76bc55',
-        color: eventColors[leaveType]?.color || 'white', 
-        description: note || '',
+        color: eventColors[leaveType]?.color || 'white',
+        description: leaveType === 'Note' ? note : leaveType,
+        leaveNumber: leaveNumber || '',
       };
 
       try {
@@ -113,71 +174,16 @@ const EmployeeLeaveCalendar = () => {
     }
   };
 
-  const handleAddEmployee = async () => {
-    if (newEmployee.trim()) {
-      const newEmployeeData = { name: newEmployee };
-      try {
-        await addDoc(collection(db, 'employees'), newEmployeeData);
-        setNewEmployee('');
-      } catch (error) {
-        console.error('Error adding employee:', error);
-      }
-    }
-  };
-
-  const handleDeleteEmployee = async (employeeId) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this employee?");
-    if (confirmDelete) {
-      try {
-        await deleteDoc(doc(db, 'employees', employeeId));
-      } catch (error) {
-        console.error('Error deleting employee:', error);
-      }
-    }
-  };
-
   const handleDeleteEvent = async (eventId) => {
     const confirmDelete = window.confirm("Are you sure you want to delete this leave event?");
     if (confirmDelete) {
       try {
         await deleteDoc(doc(db, 'events', eventId));
+        setLeaveDetailModalOpen(false);
       } catch (error) {
         console.error('Error deleting event:', error);
       }
     }
-  };
-
-  const handleDeleteTask = async (employeeId, taskId) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this task?");
-    if (confirmDelete) {
-      try {
-        await deleteDoc(doc(db, 'tasks', taskId));
-      } catch (error) {
-        console.error('Error deleting task:', error);
-      }
-    }
-  };
-
-  const handleAddTask = async () => {
-    if (taskDescription.trim() && selectedEmployeeId) {
-      const newTask = {
-        employeeId: selectedEmployeeId,
-        task: taskDescription,
-      };
-
-      try {
-        await addDoc(collection(db, 'tasks'), newTask);
-        setTaskDescription('');
-        setTaskDialogOpen(false);
-      } catch (error) {
-        console.error('Error adding task:', error);
-      }
-    }
-  };
-
-  const handleEditTask = (employeeId) => {
-    setSelectedEmployeeId(employeeId);
-    setTaskDialogOpen(true);
   };
 
   Modal.setAppElement('#root');
@@ -187,37 +193,19 @@ const EmployeeLeaveCalendar = () => {
       <h1 style={{ textAlign: 'center', color: '#4cbc55' }}>TESTER KKC JOB TRACKING</h1>
 
       <FullCalendar
-  plugins={[dayGridPlugin, interactionPlugin]}
-  initialView="dayGridMonth"
-  events={events}
-  dateClick={(info) => {
-    setSelectedDate(info.dateStr);
-    setIsModalOpen(true);
-  }}
-  eventContent={(eventInfo) => (
-    <div style={{ fontSize: '15px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center' ,padding:'5px'}}>
-      <span>{eventInfo.event.title}</span>
-      {eventInfo.event.extendedProps.description && (
-        <span style={{ fontSize: '18px', color: '#555' }}>
-          {eventInfo.event.extendedProps.description}
-        </span>
-      )}
-      <button
-        style={{
-          marginTop:'5px',
-          background: 'red',
-          color: 'white',
-          border: 'none',
-          borderRadius: '3px',
-          cursor: 'pointer',
+        plugins={[dayGridPlugin, interactionPlugin]}
+        initialView="dayGridMonth"
+        events={events}
+        dateClick={(info) => {
+          setSelectedDate(info.dateStr);
+          setIsModalOpen(true);
         }}
-        onClick={() => handleDeleteEvent(eventInfo.event.id)}
-      >
-        ✕
-      </button>
-    </div>
-  )}
-/>
+        eventClick={(info) => {
+          setSelectedEvent(info.event);
+          setLeaveDetailModalOpen(true);
+        }}
+      />
+
 <div style={{ marginTop: '30px' }}>
         <h2>Manage Employees</h2>
         <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center' }}>
@@ -293,38 +281,38 @@ const EmployeeLeaveCalendar = () => {
         </Grid>
       </div>
 
-      {/* Modal for Adding Task */}
       <Modal
-        isOpen={taskDialogOpen}
-        onRequestClose={() => setTaskDialogOpen(false)}
-        style={{
-          content: {
-            width: '400px',
-            margin: 'auto',
-            padding: '20px',
-            borderRadius: '10px',
-            border: '1px solid #4cbc55',
-          },
-        }}
-      >
-        <h2>Add Task</h2>
-        <TextField
-          label="Task Description"
-          variant="outlined"
-          value={taskDescription}
-          onChange={(e) => setTaskDescription(e.target.value)}
-          fullWidth
-          style={{ marginBottom: '20px' }}
-        />
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleAddTask}
-          style={{ width: '100%' }}
-        >
-          Save Task
-        </Button>
-      </Modal>
+              isOpen={taskDialogOpen}
+              onRequestClose={() => setTaskDialogOpen(false)}
+              style={{
+                content: {
+                  width: '400px',
+                  margin: 'auto',
+                  padding: '20px',
+                  borderRadius: '10px',
+                  border: '1px solid #4cbc55',
+                },
+              }}
+            >
+              <h2>Add Task</h2>
+              <TextField
+                label="Task Description"
+                variant="outlined"
+                value={taskDescription}
+                onChange={(e) => setTaskDescription(e.target.value)}
+                fullWidth
+                style={{ marginBottom: '20px' }}
+              />
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleAddTask}
+                style={{ width: '100%' }}
+              >
+                Save Task
+              </Button>
+            </Modal>
+
       {/* Modal for Adding Leave */}
       <Modal
         isOpen={isModalOpen}
@@ -397,7 +385,6 @@ const EmployeeLeaveCalendar = () => {
             fullWidth
             value={leaveNumber}
             onChange={(e) => setLeaveNumber(e.target.value)}
-            style={{ marginBottom: '20px' }}
           />
         )}
 
@@ -408,13 +395,51 @@ const EmployeeLeaveCalendar = () => {
             fullWidth
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            style={{ marginBottom: '20px' }}
           />
         )}
 
-        <Button variant="contained" color="primary" onClick={handleSaveLeave} fullWidth>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleSaveLeave}
+          style={{ marginTop: '20px', backgroundColor: '#4cbc55', color: 'white' }}
+        >
           Save Leave
         </Button>
+      </Modal>
+
+      {/* Modal for Leave Details */}
+      <Modal
+        isOpen={leaveDetailModalOpen}
+        onRequestClose={() => setLeaveDetailModalOpen(false)}
+        style={{
+          content: {
+            width: '400px',
+            margin: 'auto',
+            padding: '20px',
+            borderRadius: '10px',
+            border: '1px solid #4cbc55',
+          },
+        }}
+      >
+        <h2>Leave Details</h2>
+        {selectedEvent && (
+          <div>
+            <p><strong>Employee:</strong> {selectedEvent.title}</p>
+            <p><strong>Date:</strong> {new Date(selectedEvent.start).toLocaleDateString()}</p>
+            <p><strong>Description:</strong> {selectedEvent.extendedProps?.description}</p>
+            <p><strong>Leave Number:</strong> {selectedEvent.extendedProps?.leaveNumber}</p>
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={() => handleDeleteEvent(selectedEvent.id)}
+              startIcon={<DeleteIcon />}
+              style={{ backgroundColor: '#e74c3c', color: 'white' }}
+            >
+              Delete Leave
+            </Button>
+          </div>
+        )}
       </Modal>
     </div>
   );
