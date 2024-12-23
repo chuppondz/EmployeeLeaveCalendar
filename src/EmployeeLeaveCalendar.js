@@ -110,7 +110,7 @@ const EmployeeLeaveCalendar = () => {
     };
   
     const handleDeleteEmployee = async (employeeId) => {
-      const confirmDelete = window.confirm("Are you sure you want to delete this employee?");
+      const confirmDelete = window.confirm("ยืนยันการลบพนักงาน ?");
       if (confirmDelete) {
         try {
           await deleteDoc(doc(db, 'employees', employeeId));
@@ -121,7 +121,7 @@ const EmployeeLeaveCalendar = () => {
     };
 
     const handleDeleteTask = async (employeeId, taskId) => {
-        const confirmDelete = window.confirm("Are you sure you want to delete this task?");
+        const confirmDelete = window.confirm("ยืนยันการลบงาน ?");
         if (confirmDelete) {
           try {
             await deleteDoc(doc(db, 'tasks', taskId));
@@ -175,7 +175,7 @@ const EmployeeLeaveCalendar = () => {
   };
 
   const handleDeleteEvent = async (eventId) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this leave event?");
+    const confirmDelete = window.confirm("ยืนยันที่จะลบ");
     if (confirmDelete) {
       try {
         await deleteDoc(doc(db, 'events', eventId));
@@ -207,22 +207,22 @@ const EmployeeLeaveCalendar = () => {
       />
 
 <div style={{ marginTop: '30px' }}>
-        <h2>Manage Employees</h2>
+        <h2>จัดการพนักงาน</h2>
         <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center' }}>
           <TextField
-            label="Add Employee Name"
+            label="กรอกชื่อพนักงานใหม่"
             variant="outlined"
             value={newEmployee}
             onChange={(e) => setNewEmployee(e.target.value)}
-            style={{ marginRight: '10px', width: '250px' }}
+            style={{ margin: '10px', width: '250px' }}
           />
           <Button
             variant="contained"
             color="primary"
             onClick={handleAddEmployee}
-            style={{ marginLeft: '10px' }}
+            style={{ margin: '10px' }}
           >
-            Add
+            บันทึก
           </Button>
         </div>
 
@@ -231,9 +231,9 @@ const EmployeeLeaveCalendar = () => {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ backgroundColor: '#4cbc55', color: 'white' }}>
-                  <th style={{ padding: '10px', border: '1px solid white' }}>Employee Name</th>
-                  <th style={{ padding: '10px', border: '1px solid white' }}>Tasks</th>
-                  <th style={{ padding: '10px', border: '1px solid white' }}>Actions</th>
+                  <th style={{ padding: '10px', border: '1px solid white' }}>ชื่อพนักงาน</th>
+                  <th style={{ padding: '10px', border: '1px solid white' }}>งานที่ถือ</th>
+                  <th style={{ padding: '10px', border: '1px solid white' }}> </th>
                 </tr>
               </thead>
               <tbody>
@@ -261,16 +261,16 @@ const EmployeeLeaveCalendar = () => {
                         variant="outlined"
                         color="primary"
                         onClick={() => handleEditTask(employee.id)}
-                        style={{ marginRight: '10px' }}
+                        style={{ margin: '10px' }}
                       >
                         <EditIcon />
                       </Button>
                       <Button
                         variant="outlined"
-                        color="secondary"
+                        color="warning"
                         onClick={() => handleDeleteEmployee(employee.id)}
                       >
-                        Delete
+                        ลบพนักงาน
                       </Button>
                     </td>
                   </tr>
@@ -294,9 +294,9 @@ const EmployeeLeaveCalendar = () => {
                 },
               }}
             >
-              <h2>Add Task</h2>
+              <h2>เพิ่มงาน</h2>
               <TextField
-                label="Task Description"
+                label="ชื่องาน"
                 variant="outlined"
                 value={taskDescription}
                 onChange={(e) => setTaskDescription(e.target.value)}
@@ -309,7 +309,7 @@ const EmployeeLeaveCalendar = () => {
                 onClick={handleAddTask}
                 style={{ width: '100%' }}
               >
-                Save Task
+                บักทึกงาน
               </Button>
             </Modal>
 
@@ -327,9 +327,9 @@ const EmployeeLeaveCalendar = () => {
           },
         }}
       >
-        <h2>Add Leave</h2>
+        <h2>เพิ่มใบลา</h2>
         <div style={{ marginBottom: '10px' }}>
-          <label style={{ display: 'block' }}>Employee</label>
+          <label style={{ display: 'block' }}>เลือกชื่อพนักงาน</label>
           <select
             value={employeeName}
             onChange={(e) => setEmployeeName(e.target.value)}
@@ -341,7 +341,7 @@ const EmployeeLeaveCalendar = () => {
               borderColor: '#4cbc55',
             }}
           >
-            <option value="">-- Select Employee --</option>
+            <option value="">เลือกชื่อพนักงาน</option>
             {employees.map((employee) => (
               <option key={employee.id} value={employee.name}>
                 {employee.name}
@@ -351,7 +351,7 @@ const EmployeeLeaveCalendar = () => {
         </div>
 
         <div style={{ marginBottom: '10px' }}>
-          <label style={{ display: 'block' }}>Leave Type</label>
+          <label style={{ display: 'block' }}>ประเภทการลา</label>
           <select
             value={leaveType}
             onChange={(e) => setLeaveType(e.target.value)}
@@ -363,7 +363,7 @@ const EmployeeLeaveCalendar = () => {
               borderColor: '#4cbc55',
             }}
           >
-            <option value="">-- Select Leave Type --</option>
+            <option value="">ประเภทการลา</option>
             <option value="ลาป่วยทั้งวัน">ลาป่วยทั้งวัน</option>
             <option value="ลาป่วยช่วงเช้า">ลาป่วยช่วงเช้า</option>
             <option value="ลาป่วยช่วงบ่าย">ลาป่วยช่วงบ่าย</option>
@@ -380,7 +380,7 @@ const EmployeeLeaveCalendar = () => {
 
         {leaveType !== 'Note' && (
           <TextField
-            label="Leave Number"
+            label="เลขที่ใบลา"
             variant="outlined"
             fullWidth
             value={leaveNumber}
@@ -404,7 +404,7 @@ const EmployeeLeaveCalendar = () => {
           onClick={handleSaveLeave}
           style={{ marginTop: '20px', backgroundColor: '#4cbc55', color: 'white' }}
         >
-          Save Leave
+          บันทึกใบลา
         </Button>
       </Modal>
 
@@ -422,13 +422,13 @@ const EmployeeLeaveCalendar = () => {
           },
         }}
       >
-        <h2>Leave Details</h2>
+        <h2>รายละเอียดใบลา</h2>
         {selectedEvent && (
           <div>
-            <p><strong>Employee:</strong> {selectedEvent.title}</p>
-            <p><strong>Date:</strong> {new Date(selectedEvent.start).toLocaleDateString()}</p>
-            <p><strong>Description:</strong> {selectedEvent.extendedProps?.description}</p>
-            <p><strong>Leave Number:</strong> {selectedEvent.extendedProps?.leaveNumber}</p>
+            <p><strong>ชื่อพนักงาน:</strong> {selectedEvent.title}</p>
+            <p><strong>วันที่ลา:</strong> {new Date(selectedEvent.start).toLocaleDateString()}</p>
+            <p><strong>ประเภทกาลา:</strong> {selectedEvent.extendedProps?.description}</p>
+            <p><strong>เลขที่ใบลา:</strong> {selectedEvent.extendedProps?.leaveNumber}</p>
             <Button
               variant="contained"
               color="secondary"
@@ -436,7 +436,7 @@ const EmployeeLeaveCalendar = () => {
               startIcon={<DeleteIcon />}
               style={{ backgroundColor: '#e74c3c', color: 'white' }}
             >
-              Delete Leave
+              ลบใบลา
             </Button>
           </div>
         )}
