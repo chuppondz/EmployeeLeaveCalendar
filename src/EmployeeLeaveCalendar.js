@@ -427,7 +427,7 @@ const EmployeeLeaveCalendar = () => {
           <div>
             <p><strong>ชื่อพนักงาน:</strong> {selectedEvent.title}</p>
             <p><strong>วันที่ลา:</strong> {new Date(selectedEvent.start).toLocaleDateString()}</p>
-            <p><strong>ประเภทกาลา:</strong> {selectedEvent.extendedProps?.description}</p>
+            <p><strong>ประเภทการลา:</strong> {selectedEvent.extendedProps?.description}</p>
             <p><strong>เลขที่ใบลา:</strong> {selectedEvent.extendedProps?.leaveNumber}</p>
             <Button
               variant="contained"
