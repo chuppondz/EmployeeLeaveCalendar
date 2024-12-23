@@ -291,9 +291,24 @@ const EmployeeLeaveCalendar = () => {
                   padding: '20px',
                   borderRadius: '10px',
                   border: '1px solid #4cbc55',
+                  position: 'relative', // เพิ่มเพื่อวางปุ่ม X
                 },
               }}
             >
+              <button
+    onClick={() => setTaskDialogOpen(false)}
+    style={{
+      position: 'absolute',
+      top: '10px',
+      right: '10px',
+      background: 'transparent',
+      border: 'none',
+      fontSize: '20px',
+      cursor: 'pointer',
+    }}
+  >
+    &times;
+  </button>
               <h2>เพิ่มงาน</h2>
               <TextField
                 label="ชื่องาน"
@@ -324,9 +339,26 @@ const EmployeeLeaveCalendar = () => {
             padding: '20px',
             borderRadius: '10px',
             border: '1px solid #4cbc55',
+            position: 'relative', // เพิ่มเพื่อวางปุ่ม X
           },
         }}
       >
+  
+        {/* ปุ่ม X */}
+  <button
+    onClick={() => setIsModalOpen(false)}
+    style={{
+      position: 'absolute',
+      top: '10px',
+      right: '10px',
+      background: 'transparent',
+      border: 'none',
+      fontSize: '20px',
+      cursor: 'pointer',
+    }}
+  >
+    &times;
+  </button>
         <h2>เพิ่มใบลา</h2>
         <div style={{ marginBottom: '10px' }}>
           <label style={{ display: 'block' }}>เลือกชื่อพนักงาน</label>
@@ -419,9 +451,25 @@ const EmployeeLeaveCalendar = () => {
             padding: '20px',
             borderRadius: '10px',
             border: '1px solid #4cbc55',
+            position: 'relative', // เพิ่มเพื่อวางปุ่ม X
           },
         }}
       >
+        {/* ปุ่ม X */}
+  <button
+    onClick={() => setLeaveDetailModalOpen(false)}
+    style={{
+      position: 'absolute',
+      top: '10px',
+      right: '10px',
+      background: 'transparent',
+      border: 'none',
+      fontSize: '20px',
+      cursor: 'pointer',
+    }}
+  >
+    &times;
+  </button>
         <h2>รายละเอียดใบลา</h2>
         {selectedEvent && (
           <div>
