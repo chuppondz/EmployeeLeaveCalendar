@@ -8,6 +8,9 @@ import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot } from 'fi
 import { TextField, Button, IconButton, Grid } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import { ThemeProvider } from '@mui/material/styles';
+import { createMuiTheme } from '@mui/material/styles';
+
 
 // Firebase configuration
 const firebaseConfig = {
@@ -19,6 +22,12 @@ const firebaseConfig = {
   appId: "1:678292437150:web:71c9e3964c2393ae9b638f",
   measurementId: "G-0R8EY08TL7"
 };
+
+const theme = createMuiTheme({
+  typography: {
+    fontFamily:'Kanit'
+  }
+});
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -189,8 +198,9 @@ const EmployeeLeaveCalendar = () => {
   Modal.setAppElement('#root');
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif', color: '#4cbc55' }}>
-      <h1 style={{ textAlign: 'center', color: '#4cbc55' }}>TESTER KKC JOB TRACKING</h1>
+    <ThemeProvider theme={theme}>
+    <div style={{ padding: '20px', fontFamily: 'Kanit', color: '#4cbc55' }}>
+      <h1 style={{ textAlign: 'center', color: '#4cbc55',fontSize:'40px'}}>TESTER KKC JOB TRACKING</h1>
 
       <FullCalendar
         plugins={[dayGridPlugin, interactionPlugin]}
@@ -490,6 +500,7 @@ const EmployeeLeaveCalendar = () => {
         )}
       </Modal>
     </div>
+    </ThemeProvider>
   );
 };
 
