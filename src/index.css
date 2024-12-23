@@ -10,6 +10,11 @@ body {
   font-family: 'Kanit';
 }
 
+select {
+  font-family: 'Kanit';
+  font-size: 15px;
+}
+
 code {
   font-family: 'Kanit';
 }
