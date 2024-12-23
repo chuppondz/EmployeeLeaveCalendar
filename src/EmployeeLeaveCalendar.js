@@ -324,7 +324,7 @@ const EmployeeLeaveCalendar = () => {
                 onClick={handleAddTask}
                 style={{ width: '100%' }}
               >
-                บักทึกงาน
+                บันทึกงาน
               </Button>
             </Modal>
 
