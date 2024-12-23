@@ -149,7 +149,7 @@ const EmployeeLeaveCalendar = () => {
         "ลาพักร้อนช่วงเช้า": { backgroundColor: '#4fb5f9', color: 'black' },
         "ลาพักร้อนช่วงบ่าย": { backgroundColor: '#4fb5f9', color: 'black' },
         "ลาอื่นๆ": { backgroundColor: '#9b59b6', color: 'black' },
-        "Note": { backgroundColor: '#f1c1c1', color: 'black' },
+        "Note": { backgroundColor: 'red', color: 'white' },
       };
 
       const newEvent = {

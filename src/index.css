@@ -39,3 +39,8 @@ code {
 h2#fc-dom-1 {
   font-size: 20px;
 }
+
+.ReactModal__Content.ReactModal__Content--after-open {
+  width: 67% !important;
+  height: 70% !important;
+}
